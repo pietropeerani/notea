@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Footer from "../component/footer";
 
 export default function Home() {
     return (
@@ -10,9 +11,7 @@ export default function Home() {
                 </Link>
             </div>
 
-            <div className="fixed left-0 bottom-4 w-full flex justify-center">
-                <Link to={'/about'} className="hover:underline">About</Link>
-            </div>
+            <Footer />
         </>
     )
 }
