@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
+const LOCAL_STORAGE_KEY = 'note_backup';
+
 export default function Editor() {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const cursorRef = useRef<HTMLDivElement | null>(null);
@@ -25,6 +27,13 @@ export default function Editor() {
   useEffect(() => {
     const editor = editorRef.current;
     if (editor) {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) {
+        editor.innerText = saved;
+      } else {
+        editor.innerText = '';
+      }
+
       editor.focus();
       updateCursorPosition();
     }
@@ -32,6 +41,12 @@ export default function Editor() {
 
   const handleKeyDown = () => {
     requestAnimationFrame(updateCursorPosition);
+  };
+
+  const handleInput = () => {
+    const content = editorRef.current?.innerText || '';
+    localStorage.setItem(LOCAL_STORAGE_KEY, content);
+    updateCursorPosition();
   };
 
   const blinkStyle = `
@@ -60,7 +75,7 @@ export default function Editor() {
         contentEditable: true,
         spellCheck: false,
         onClick: updateCursorPosition,
-        onInput: updateCursorPosition,
+        onInput: handleInput,
         onKeyUp: updateCursorPosition,
         onKeyDown: handleKeyDown,
       }),
