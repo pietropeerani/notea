@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function Editor() {
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -12,13 +12,14 @@ export default function Editor() {
     range.collapse(true);
 
     const rect = range.getClientRects()[0];
-    if (!rect) return;
+    const editorRect = editorRef.current?.getBoundingClientRect();
+    const cursor = cursorRef.current;
 
-    const customCursor = cursorRef.current;
-    if (customCursor) {
-      customCursor.style.left = `${rect.left}px`;
-      customCursor.style.top = `${rect.top}px`;
-    }
+    if (!rect || !editorRect || !cursor) return;
+
+    cursor.style.left = `${rect.left - editorRect.left + 20}px`;
+    cursor.style.top = `${rect.top - editorRect.top + 20}px`;
+    cursor.style.height = `${rect.height || 20}px`;
   };
 
   useEffect(() => {
@@ -30,27 +31,49 @@ export default function Editor() {
   }, []);
 
   const handleKeyDown = () => {
-    setTimeout(updateCursorPosition, 0);
+    requestAnimationFrame(updateCursorPosition);
   };
 
-  return (
-    <div className="relative w-full h-screen p-5">
-      <div
-        ref={editorRef}
-        id="editor"
-        className="h-full w-full outline-0 whitespace-pre-wrap break-all caret-transparent"
-        contentEditable
-        spellCheck={false}
-        onClick={updateCursorPosition}
-        onInput={updateCursorPosition}
-        onKeyUp={updateCursorPosition}
-        onKeyDown={handleKeyDown}
-      ></div>
-      <div
-        ref={cursorRef}
-        id="custom-cursor"
-        className="absolute w-0.5 h-[1.2em] bg-black pointer-events-none transition-[top_0.1s_ease,_left_0.1s_ease]"
-      ></div>
-    </div>
+  const blinkStyle = `
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .animate-blink {
+      animation: blink 1s step-start infinite;
+    }
+  `;
+
+  return React.createElement(
+    'div',
+    {
+      className: 'relative w-full h-screen p-5 bg-black text-white',
+    },
+    [
+      React.createElement('style', { key: 'style' }, blinkStyle),
+      React.createElement('div', {
+        key: 'editor',
+        ref: editorRef,
+        id: 'editor',
+        className:
+          'h-full w-full outline-0 whitespace-pre-wrap break-all caret-transparent',
+        contentEditable: true,
+        spellCheck: false,
+        onClick: updateCursorPosition,
+        onInput: updateCursorPosition,
+        onKeyUp: updateCursorPosition,
+        onKeyDown: handleKeyDown,
+      }),
+      React.createElement('div', {
+        key: 'cursor',
+        ref: cursorRef,
+        id: 'custom-cursor',
+        className:
+          'absolute w-[0.6em] bg-white pointer-events-none transition-all animate-blink',
+        style: {
+          height: '1em',
+        },
+      }),
+    ]
   );
 }
